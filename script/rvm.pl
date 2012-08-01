@@ -6,10 +6,8 @@ use feature 'say';
 use warnings;
 
 use Ruby::VersionManager;
-use Getopt::Long qw(:config pass_through);
-
-my $action = shift;
-my $arg = shift;
+my $action  = shift;
+my @options = @ARGV;
 
 die "No action defined." unless $action;
 
@@ -24,13 +22,16 @@ my $dispatch_table = {
         $rvm->updatedb;
         exit 0;
     },
+    gem => sub {
+        $rvm->gem(@options);
+    },
     install => sub {
-        my $ruby_version = $arg || '1.9';
+        my $ruby_version = shift @options || '1.9';
         $rvm->ruby_version($ruby_version);
         $rvm->install;
     },
     uninstall => sub {
-        my $ruby_version = $arg;
+        my $ruby_version = shift @options;
         die "no version defined" unless $ruby_version;
 
         $rvm->ruby_version($ruby_version);
@@ -42,7 +43,7 @@ my $dispatch_table = {
     },
 };
 
-if (exists $dispatch_table->{$action}){
+if ( exists $dispatch_table->{$action} ) {
     $dispatch_table->{$action}->();
 }
 else {
@@ -61,7 +62,7 @@ This is an unstable development release not ready for production!
 
 =head1 VERSION
 
-Version 0.003008
+Version 0.003014
 
 =head1 SYNOPSIS
 
@@ -120,6 +121,18 @@ You have to provide the full exact version of the ruby you want to remove as sho
     rvm.pl uninstall ruby-1.9.3-preview1
 
 If you uninstall your currently active ruby version you have to install/activate another version manually.
+
+=head2 gem
+
+Pass arguments to the gem command.
+
+    rvm.pl gem install unicorn # installs unicorn
+
+Additionally you can use reinstall to reinstall your complete gemset. With a file containing the output of 'gem list' you can reproduce gemsets.
+
+    rvm.pl gem reinstall gem_list.txt # installs all gems in the list exactly as given
+
+    rvm.pl gem reinstall # reinstalls all installed gems
 
 =head1 LIMITATIONS AND TODO
 
